@@ -16,7 +16,7 @@ def move_from_file(filename):
 
 
 def create_masks():
-    with open('/home/james/Pictures/iccv09Data/train.txt') as train_names:
+    with open('/home/james/Pictures/iccv09Data/val.txt') as train_names:
         for file in train_names:
             file = file.strip('\n')
             filename = os.path.basename(file).split('.regions')[0]
@@ -51,8 +51,9 @@ def create_masks():
 
                 image = np.array(image)
                 im = Image.fromarray(image.astype('uint8'))
-                im.save('./iccv09Data/train_labels/%s.png' % filename)
+                im.save('./iccv09Data/val_labels/%s.png' % filename)
                 shutil.copyfile('/home/james/Pictures/iccv09Data/images/' + filename + '.jpg',
-                                './iccv09Data/train/%s.jpg' % filename)
+                                './iccv09Data/val/%s.jpg' % filename)
+
 if __name__ == '__main__':
     create_masks()
