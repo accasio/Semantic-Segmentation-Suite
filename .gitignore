@@ -16,4 +16,3 @@ tfrecords.py
 .idea
 iccv09Data
 ./*.png
-models/
