@@ -14,5 +14,4 @@ colour_codes.csv
 CamVid_train.tfrecords
 tfrecords.py
 .idea
-iccv09Data
-./*.png
+datasets/
