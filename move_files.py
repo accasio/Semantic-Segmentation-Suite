@@ -1,8 +1,13 @@
+from random import seed
+seed(1)
 import os
 import numpy as np
 from PIL import Image
 import glob
 import shutil
+
+from random import shuffle
+
 
 
 def move_from_file(filename):
@@ -55,5 +60,60 @@ def create_masks():
                 shutil.copyfile('/home/james/Pictures/iccv09Data/images/' + filename + '.jpg',
                                 './iccv09Data/val/%s.jpg' % filename)
 
+
+def move_train_masks():
+    for file in glob.glob('/home/james/Pictures/Images_master/original*.png'):
+        filename = os.path.basename(file)
+        print(filename)
+        shutil.copyfile(file, '/home/james/Pictures/train/images/%s' % filename)
+
+
+def split_imgs():
+    x_list = [str(x) for x in range(1,1000)]
+    shuffle(x_list)
+    index_num = int(len(x_list) * 0.8)
+    train_cpy = x_list[:index_num]
+    test = x_list[index_num:]
+    index_num = int(len(train_cpy) * 0.8)
+    train = train_cpy[:index_num]
+    val = train_cpy[index_num:]
+
+    for file in glob.glob('/home/james/Pictures/train/images/*.png'):
+        filename = os.path.basename(file)
+        filename = filename.split('original_')[1].split('.png')[0]
+        if filename in val:
+            shutil.copyfile(file, '/home/james/Pictures/train/val/%s' % filename)
+        elif filename in test:
+            shutil.copyfile(file, '/home/james/Pictures/train/test/%s' % filename)
+        elif filename in train:
+            shutil.copyfile(file, '/home/james/Pictures/train/train/%s' % filename)
+        else:
+            print('%s not found in any lists' % filename)
+
+
+def split_labels():
+    x_list = [str(x) for x in range(1,1000)]
+    shuffle(x_list)
+    index_num = int(len(x_list) * 0.8)
+    train_cpy = x_list[:index_num]
+    test = x_list[index_num:]
+    index_num = int(len(train_cpy) * 0.8)
+    train = train_cpy[:index_num]
+    val = train_cpy[index_num:]
+
+    for file in glob.glob('/home/james/Pictures/train/labels/*.png'):
+        filename = os.path.basename(file)
+        filename = filename.split('segmented_train_')[1].split('.png')[0]
+        if filename in val:
+            shutil.copyfile(file, '/home/james/Pictures/train/val_labels/%s.png' % filename)
+        elif filename in test:
+            shutil.copyfile(file, '/home/james/Pictures/train/test_labels/%s.png' % filename)
+        elif filename in train:
+            shutil.copyfile(file, '/home/james/Pictures/train/train_labels/%s.png' % filename)
+        else:
+            print('%s not found in any lists' % filename)
+
+
+
 if __name__ == '__main__':
-    create_masks()
+    split_labels()

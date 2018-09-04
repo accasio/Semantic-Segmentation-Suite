@@ -36,7 +36,7 @@ parser.add_argument('--dataset', type=str, default="CamVid", help='Dataset you a
 parser.add_argument('--crop_height', type=int, default=512, help='Height of cropped input image to network')
 parser.add_argument('--crop_width', type=int, default=512, help='Width of cropped input image to network')
 parser.add_argument('--batch_size', type=int, default=1, help='Number of images in each batch')
-parser.add_argument('--num_val_images', type=int, default=75, help='The number of images to used for validations')
+parser.add_argument('--num_val_images', type=int, default=100, help='The number of images to used for validations')
 parser.add_argument('--h_flip', type=str2bool, default=False,
                     help='Whether to randomly flip the image horizontally for data augmentation')
 parser.add_argument('--v_flip', type=str2bool, default=False,
@@ -79,8 +79,6 @@ def data_augmentation(input_image, output_image):
 
 
 # Get the names of the classes so we can record the evaluation results
-print(args.dataset)
-print(os.path.join("./datasets/" + args.dataset, "class_dict.csv"))
 class_names_list, label_values = helpers.get_label_info(os.path.join("./datasets/" + args.dataset, "class_dict.csv"))
 class_names_string = ""
 for class_name in class_names_list:
