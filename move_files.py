@@ -114,11 +114,46 @@ def split_labels():
             print('%s not found in any lists' % filename)
 
 
+def reduce_img_size(base_dir):
+    dirs = ['train', 'train_labels', 'test', 'test_labels', 'val_labels', 'val']
+    for sub_dir in dirs:
+        dir = base_dir + sub_dir
+        if not os.path.isdir("%s/resized" % dir):
+            os.makedirs("%s/resized" % dir)
+
+        for file in glob.glob('%s/*' % dir):
+            if '.csv' in file:
+                continue
+            if os.path.isdir(file):
+                continue
+            img = Image.open(file)
+            img_resized = img.resize((500, 500), Image.ANTIALIAS)
+            img_resized.save('%s/resized/%s.png' % (dir, os.path.basename(file)))
+
+
+def double_ext(folder):
+    for file in glob.glob('%s/*.png.png' % folder):
+        filename = file.split('.png.png')[0]
+        os.rename(file, '%s.png' % filename)
+
+
+def reduce_img_res(base_dir):
+    dirs = ['train', 'train_labels', 'test', 'test_labels', 'val_labels', 'val']
+    for sub_dir in dirs:
+        dir = base_dir + sub_dir
+        if not os.path.isdir("%s/resized" % dir):
+            os.makedirs("%s/resized" % dir)
+
+        for file in glob.glob('%s/*' % dir):
+            if '.csv' in file:
+                continue
+            if os.path.isdir(file):
+                continue
+            img = Image.open(file)
+            img_resized = img.resize((500, 500), Image.ANTIALIAS)
+            img_resized.save('%s/resized/%s.png' % (dir, os.path.basename(file)))
 
 if __name__ == '__main__':
-    import tensorflow as tf
-
-    with tf.Session() as sess:
-        saver = tf.train.import_meta_graph('./checkpoints/trains/latest_model_DeepLabV3_trains.ckpt.meta')
-        saver.restore(sess, "./checkpoints/trains/checkpoint")
-    # split_labels()
+    # reduce_img_size('/home/james/Documents/seg-suite/datasets/trains/')
+    double_ext('/home/james/Documents/seg-suite/datasets/trains/val_labels/')
+    double_ext('/home/james/Documents/seg-suite/datasets/trains/train_labels/')
