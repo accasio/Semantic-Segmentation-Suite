@@ -7,7 +7,7 @@ models/*.pb
 models/*txt
 models/*.tflite
 checkpoints/
-Test/*.png
+test/
 accuracy_vs_epochs.png
 loss_vs_epochs.png
 colour_codes.csv

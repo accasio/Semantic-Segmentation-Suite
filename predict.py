@@ -37,13 +37,18 @@ sess=tf.Session(config=config)
 net_input = tf.placeholder(tf.float32,shape=[None,None,None,3])
 net_output = tf.placeholder(tf.float32,shape=[None,None,None,num_classes]) 
 
-network, _ = model_builder.build_model(args.model, net_input=net_input, num_classes=num_classes, is_training=False)
+network, _ = model_builder.build_model(args.model, net_input=net_input, num_classes=num_classes, is_training=False, crop_height=args.crop_height, crop_width=args.crop_width)
 
 sess.run(tf.global_variables_initializer())
 
 print('Loading model checkpoint weights')
-saver=tf.train.Saver(max_to_keep=1000)
-saver.restore(sess, args.checkpoint_path)
+saver = None
+if '.meta' in args.checkpoint_path:
+    saver = tf.train.import_meta_graph(args.checkpoint_path)
+    saver.restore(sess, args.checkpoint_path.split('.meta')[0])
+else:
+  saver=tf.train.Saver(max_to_keep=1000)
+  saver.restore(sess, args.checkpoint_path)
 
 
 print("Testing image " + args.image)

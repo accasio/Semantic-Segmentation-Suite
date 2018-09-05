@@ -116,4 +116,9 @@ def split_labels():
 
 
 if __name__ == '__main__':
-    split_labels()
+    import tensorflow as tf
+
+    with tf.Session() as sess:
+        saver = tf.train.import_meta_graph('./checkpoints/trains/latest_model_DeepLabV3_trains.ckpt.meta')
+        saver.restore(sess, "./checkpoints/trains/checkpoint")
+    # split_labels()
