@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+import glob
 import os, time, cv2, sys, math
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
@@ -158,7 +160,13 @@ random.seed(16)
 val_indices = random.sample(range(0, len(val_input_names)), num_vals)
 
 # Do the training here
-for epoch in range(0, args.num_epochs):
+start_epoch = 0
+if args.continue_training:
+    start_epoch = list(reversed(sorted(glob.glob('/%s/*/' % args.dataset))))
+    start_epoch = start_epoch[0].split('%s/' % args.dataset)[1].split('/')[0]
+    start_epoch = int(start_epoch) + 1
+
+for epoch in range(start_epoch, start_epoch + int(args.num_epochs)):
 
     current_losses = []
 
