@@ -38,7 +38,7 @@ parser.add_argument('--dataset', type=str, default="CamVid", help='Dataset you a
 parser.add_argument('--crop_height', type=int, default=512, help='Height of cropped input image to network')
 parser.add_argument('--crop_width', type=int, default=512, help='Width of cropped input image to network')
 parser.add_argument('--batch_size', type=int, default=1, help='Number of images in each batch')
-parser.add_argument('--num_val_images', type=int, default=100, help='The number of images to used for validations')
+parser.add_argument('--num_val_images', type=int, default=25, help='The number of images to used for validations')
 parser.add_argument('--h_flip', type=str2bool, default=False,
                     help='Whether to randomly flip the image horizontally for data augmentation')
 parser.add_argument('--v_flip', type=str2bool, default=False,
@@ -103,13 +103,13 @@ network, init_fn = model_builder.build_model(model_name=args.model, frontend=arg
                                              num_classes=num_classes, crop_width=args.crop_width,
                                              crop_height=args.crop_height, is_training=True)
 
-loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=network, labels=net_output))
+loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=network, labels=net_output))
 
-opt = tf.train.RMSPropOptimizer(learning_rate=0.0001, decay=0.995).minimize(loss, var_list=[var for var in
+opt = tf.train.RMSPropOptimizer(learning_rate=0.000001, decay=0.995).minimize(loss, var_list=[var for var in
                                                                                             tf.trainable_variables()])
 
 saver = tf.train.Saver(max_to_keep=1000)
-sess.run(tf.global_variables_initializer())
+# sess.run(tf.global_variables_initializer())
 
 utils.count_params()
 checkpoint_dir = "checkpoints/" + args.dataset
@@ -160,13 +160,19 @@ random.seed(16)
 val_indices = random.sample(range(0, len(val_input_names)), num_vals)
 
 # Do the training here
-start_epoch = 0
+offset = 0
 if args.continue_training:
-    start_epoch = list(reversed(sorted(glob.glob('/%s/*/' % args.dataset))))
-    start_epoch = start_epoch[0].split('%s/' % args.dataset)[1].split('/')[0]
-    start_epoch = int(start_epoch) + 1
+    offset = list(reversed(sorted(glob.glob('./checkpoints/%s/*/' % args.dataset))))
+    offset = offset[0].split('%s/' % args.dataset)[1].split('/')[0]
+    offset = int(offset) + 1
+#
+# print('Starting training at epoch %d' % start_epoch)
 
-for epoch in range(start_epoch, start_epoch + int(args.num_epochs)):
+for epoch in range(0, int(args.num_epochs)):
+    epoch_folder = epoch + offset
+    # Create directories if needed
+    if not os.path.isdir("%s/%04d" % (checkpoint_dir, epoch_folder)):
+        os.makedirs("%s/%04d" % (checkpoint_dir, epoch_folder))
 
     current_losses = []
 
@@ -221,21 +227,21 @@ for epoch in range(start_epoch, start_epoch + int(args.num_epochs)):
     mean_loss = np.mean(current_losses)
     avg_loss_per_epoch.append(mean_loss)
 
-    # Create directories if needed
-    if not os.path.isdir("%s/%04d" % (checkpoint_dir, epoch)):
-        os.makedirs("%s/%04d" % (checkpoint_dir, epoch))
-
     # Save latest checkpoint to same file name
     print("Saving latest checkpoint")
     saver.save(sess, model_checkpoint_name)
 
-    if val_indices != 0 and epoch % args.checkpoint_step == 0:
+    # Create directories if needed
+    if not os.path.isdir("%s/%04d" % (checkpoint_dir, epoch_folder)):
+        os.makedirs("%s/%04d" % (checkpoint_dir, epoch_folder))
+
+    if val_indices != 0:
         print("Saving checkpoint for this epoch")
-        saver.save(sess, "%s/%04d/model.ckpt" % (checkpoint_dir, epoch))
+        saver.save(sess, "%s/%04d/model.ckpt" % (checkpoint_dir, epoch_folder))
 
     if epoch % args.validation_step == 0:
         print("Performing validation")
-        target = open("%s/%04d/val_scores.csv" % (checkpoint_dir, epoch), 'w')
+        target = open("%s/%04d/val_scores.csv" % (checkpoint_dir, epoch_folder), 'w')
         target.write("val_name, avg_accuracy, precision, recall, f1 score, mean iou, %s\n" % (class_names_string))
 
         scores_list = []
@@ -281,9 +287,9 @@ for epoch in range(start_epoch, start_epoch + int(args.num_epochs)):
 
             file_name = os.path.basename(val_input_names[ind])
             file_name = os.path.splitext(file_name)[0]
-            cv2.imwrite("%s/%04d/%s_pred.png" % (checkpoint_dir, epoch, file_name),
+            cv2.imwrite("%s/%04d/%s_pred.png" % (checkpoint_dir, epoch_folder, file_name),
                         cv2.cvtColor(np.uint8(out_vis_image), cv2.COLOR_RGB2BGR))
-            cv2.imwrite("%s/%04d/%s_gt.png" % (checkpoint_dir, epoch, file_name),
+            cv2.imwrite("%s/%04d/%s_gt.png" % (checkpoint_dir, epoch_folder, file_name),
                         cv2.cvtColor(np.uint8(gt), cv2.COLOR_RGB2BGR))
 
         target.close()
@@ -324,7 +330,7 @@ for epoch in range(start_epoch, start_epoch + int(args.num_epochs)):
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Avg. val. accuracy")
 
-    plt.savefig('accuracy_vs_epochs.png')
+    plt.savefig('%s/accuracy_vs_epochs.png' % (checkpoint_dir))
 
     plt.clf()
 
@@ -335,7 +341,7 @@ for epoch in range(start_epoch, start_epoch + int(args.num_epochs)):
     ax2.set_xlabel("Epoch")
     ax2.set_ylabel("Current loss")
 
-    plt.savefig('loss_vs_epochs.png')
+    plt.savefig('%s/loss_vs_epochs.png' % (checkpoint_dir))
 
     plt.clf()
 
@@ -346,4 +352,4 @@ for epoch in range(start_epoch, start_epoch + int(args.num_epochs)):
     ax3.set_xlabel("Epoch")
     ax3.set_ylabel("Current IoU")
 
-    plt.savefig('iou_vs_epochs.png')
+    plt.savefig("%s/iou_vs_epochs.png" % (checkpoint_dir))

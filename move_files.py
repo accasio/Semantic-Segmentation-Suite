@@ -117,19 +117,19 @@ def split_labels():
 def reduce_img_size(base_dir):
     # e.g. base_dir = '/home/james/Documents/seg-suite/datasets/trains/'
     dirs = ['train', 'train_labels', 'test', 'test_labels', 'val_labels', 'val']
+
     for sub_dir in dirs:
         dir = base_dir + sub_dir
-        if not os.path.isdir("%s/resized" % dir):
-            os.makedirs("%s/resized" % dir)
 
-        for file in glob.glob('%s/*' % dir):
+        for file in glob.glob('%s/*.png' % dir):
             if '.csv' in file:
                 continue
             if os.path.isdir(file):
                 continue
             img = Image.open(file)
-            img_resized = img.resize((500, 500), Image.ANTIALIAS)
-            img_resized.save('%s/resized/%s.png' % (dir, os.path.basename(file)))
+            img_resized = img.resize((350, 350), Image.ANTIALIAS)
+            os.remove(file)
+            img_resized.save('%s/%s' % (dir, os.path.basename(file)))
 
 
 def double_extension(folder):
@@ -153,4 +153,4 @@ def reduce_img_res(base_dir):
 
 
 if __name__ == '__main__':
-    reduce_img_res('/home/james/Documents/seg-suite/datasets/trains/')
+    reduce_img_size('/home/james/Documents/seg-suite/datasets/trains-small/')

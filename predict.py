@@ -12,6 +12,8 @@ parser.add_argument('--checkpoint_path', type=str, default=None, required=True, 
 parser.add_argument('--crop_height', type=int, default=512, help='Height of cropped input image to network')
 parser.add_argument('--crop_width', type=int, default=512, help='Width of cropped input image to network')
 parser.add_argument('--model', type=str, default=None, required=True, help='The model you are using')
+parser.add_argument('--frontend', type=str, default="ResNet50",
+                    help='The frontend you are using. See frontend_builder.py for supported models')
 parser.add_argument('--dataset', type=str, default="CamVid", required=False, help='The dataset you are using')
 args = parser.parse_args()
 
@@ -37,19 +39,14 @@ sess=tf.Session(config=config)
 net_input = tf.placeholder(tf.float32,shape=[None,None,None,3])
 net_output = tf.placeholder(tf.float32,shape=[None,None,None,num_classes]) 
 
-network, _ = model_builder.build_model(args.model, net_input=net_input, num_classes=num_classes, is_training=False, crop_height=args.crop_height, crop_width=args.crop_width)
+network, _ = model_builder.build_model(args.model, frontend=args.frontend, net_input=net_input, num_classes=num_classes, is_training=False, crop_height=args.crop_height, crop_width=args.crop_width)
 
 sess.run(tf.global_variables_initializer())
 
 print('Loading model checkpoint weights')
-saver = None
-if '.meta' in args.checkpoint_path:
-    saver = tf.train.import_meta_graph(args.checkpoint_path)
-    saver.restore(sess, args.checkpoint_path.split('.meta')[0])
-else:
-  saver=tf.train.Saver(max_to_keep=1000)
-  saver.restore(sess, args.checkpoint_path)
 
+saver=tf.train.Saver(max_to_keep=1000)
+saver.restore(sess, args.checkpoint_path)
 
 print("Testing image " + args.image)
 
@@ -67,7 +64,11 @@ output_image = helpers.reverse_one_hot(output_image)
 
 out_vis_image = helpers.colour_code_segmentation(output_image, label_values)
 file_name = utils.filepath_to_name(args.image)
-cv2.imwrite("%s_pred.png"%(file_name),cv2.cvtColor(np.uint8(out_vis_image), cv2.COLOR_RGB2BGR))
+if not os.path.isdir("./predicted/"):
+    os.makedirs("./predicted/")
+if not os.path.isdir("./predicted/%s" % file_name):
+    os.makedirs("./predicted/%s" % file_name)
+cv2.imwrite("./predicted/%s/%s_pred.png" % (file_name, file_name),cv2.cvtColor(np.uint8(out_vis_image), cv2.COLOR_RGB2BGR))
 
 print("")
 print("Finished!")

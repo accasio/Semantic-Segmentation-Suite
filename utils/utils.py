@@ -3,6 +3,7 @@ import os,time,cv2, sys, math
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import numpy as np
+from tensorflow.python.ops import array_ops
 import time, datetime
 import os, random
 from scipy.misc import imread

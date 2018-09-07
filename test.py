@@ -12,6 +12,8 @@ parser.add_argument('--checkpoint_path', type=str, default=None, required=True,
 parser.add_argument('--crop_height', type=int, default=512, help='Height of cropped input image to network')
 parser.add_argument('--crop_width', type=int, default=512, help='Width of cropped input image to network')
 parser.add_argument('--model', type=str, default=None, required=True, help='The model you are using')
+parser.add_argument('--frontend', type=str, default="ResNet50",
+                    help='The frontend you are using. See frontend_builder.py for supported models')
 parser.add_argument('--dataset', type=str, default="CamVid", required=False, help='The dataset you are using')
 args = parser.parse_args()
 
@@ -36,19 +38,14 @@ sess = tf.Session(config=config)
 net_input = tf.placeholder(tf.float32, shape=[None, None, None, 3])
 net_output = tf.placeholder(tf.float32, shape=[None, None, None, num_classes])
 
-network, _ = model_builder.build_model(args.model, net_input=net_input, num_classes=num_classes, is_training=False,
+network, _ = model_builder.build_model(args.model, frontend=args.frontend, net_input=net_input, num_classes=num_classes, is_training=False,
                                        crop_width=args.crop_width, crop_height=args.crop_height)
 
-sess.run(tf.global_variables_initializer())
+# sess.run(tf.global_variables_initializer())
 
 print('Loading model checkpoint weights ...')
-saver = None
-if '.meta' in args.checkpoint_path:
-    saver = tf.train.import_meta_graph(args.checkpoint_path)
-    saver.restore(sess, args.checkpoint_path.split('.meta')[0])
-else:
-    saver = tf.train.Saver(max_to_keep=1000)
-    saver.restore(sess, args.checkpoint_path)
+saver = tf.train.Saver(max_to_keep=1000)
+saver.restore(sess, args.checkpoint_path)
 
 # Load the data
 print("Loading the data ...")
@@ -62,7 +59,7 @@ if not os.path.isdir("%s" % "test"):
 if not os.path.isdir("%s/%s" % ("test", args.dataset)):
     os.makedirs("%s/%s" % ("test", args.dataset))
 
-target = open("%s/test_scores.csv" % ("Test"), 'w')
+target = open("%s/test_scores.csv" % ("test"), 'w')
 target.write("test_name, test_accuracy, precision, recall, f1 score, mean iou, %s\n" % (class_names_string))
 scores_list = []
 class_scores_list = []
