@@ -11,6 +11,10 @@ import random
 import os, sys
 import subprocess
 
+# use 'Agg' on matplotlib so that plots could be generated even without Xserver
+# running
+import matplotlib
+matplotlib.use('Agg')
 from utils import utils, helpers
 from builders import model_builder
 

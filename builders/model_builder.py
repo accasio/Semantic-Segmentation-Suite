@@ -14,9 +14,13 @@ from models.DeepLabV3 import build_deeplabv3
 from models.DeepLabV3_plus import build_deeplabv3_plus
 from models.AdapNet import build_adaptnet
 from models.custom_model import build_custom
+from models.DenseASPP import build_dense_aspp
+from models.DDSC import build_ddsc
+from models.BiSeNet import build_bisenet
 
 SUPPORTED_MODELS = ["FC-DenseNet56", "FC-DenseNet67", "FC-DenseNet103", "Encoder-Decoder", "Encoder-Decoder-Skip", "RefineNet",
-    "FRRN-A", "FRRN-B", "MobileUNet", "MobileUNet-Skip", "PSPNet", "GCN", "DeepLabV3", "DeepLabV3_plus", "AdapNet", "custom"]
+    "FRRN-A", "FRRN-B", "MobileUNet", "MobileUNet-Skip", "PSPNet", "GCN", "DeepLabV3", "DeepLabV3_plus", "AdapNet",
+    "DenseASPP", "DDSC", "BiSeNet", "custom"]
 
 SUPPORTED_FRONTENDS = ["ResNet50", "ResNet101", "ResNet152", "MobileNetV2", "InceptionV4"]
 
@@ -32,10 +36,10 @@ def build_model(model_name, net_input, num_classes, crop_width, crop_height, fro
 	print("Preparing the model ...")
 
 	if model_name not in SUPPORTED_MODELS:
-		raise ValueError("The model you selelect is not supported. The following models are currently supported: {0}".format(SUPPORTED_MODELS))
+		raise ValueError("The model you selected is not supported. The following models are currently supported: {0}".format(SUPPORTED_MODELS))
 
 	if frontend not in SUPPORTED_FRONTENDS:
-		raise ValueError("The frontend you selelect is not supported. The following models are currently supported: {0}".format(SUPPORTED_FRONTENDS))
+		raise ValueError("The frontend you selected is not supported. The following models are currently supported: {0}".format(SUPPORTED_FRONTENDS))
 
 	if "ResNet50" == frontend and not os.path.isfile("models/resnet_v2_50.ckpt"):
 	    download_checkpoints("ResNet50")
@@ -43,7 +47,7 @@ def build_model(model_name, net_input, num_classes, crop_width, crop_height, fro
 	    download_checkpoints("ResNet101")
 	if "ResNet152" == frontend and not os.path.isfile("models/resnet_v2_152.ckpt"):
 	    download_checkpoints("ResNet152")
-	if "MobileNetV2" == frontend and not os.path.isfile("models/mobilenet_v2_1.4_224.ckpt.data-00000-of-00001"):
+	if "MobileNetV2" == frontend and not os.path.isfile("models/mobilenet_v2.ckpt.data-00000-of-00001"):
 	    download_checkpoints("MobileNetV2")
 	if "InceptionV4" == frontend and not os.path.isfile("models/inception_v4.ckpt"):
 	    download_checkpoints("InceptionV4") 
@@ -74,6 +78,15 @@ def build_model(model_name, net_input, num_classes, crop_width, crop_height, fro
 	elif model_name == "DeepLabV3_plus":
 	    # DeepLabV3+ requires pre-trained ResNet weights
 	    network, init_fn = build_deeplabv3_plus(net_input, preset_model = model_name, frontend=frontend, num_classes=num_classes, is_training=is_training)
+	elif model_name == "DenseASPP":
+	    # DenseASPP requires pre-trained ResNet weights
+	    network, init_fn = build_dense_aspp(net_input, preset_model = model_name, frontend=frontend, num_classes=num_classes, is_training=is_training)
+	elif model_name == "DDSC":
+	    # DDSC requires pre-trained ResNet weights
+	    network, init_fn = build_ddsc(net_input, preset_model = model_name, frontend=frontend, num_classes=num_classes, is_training=is_training)
+	elif model_name == "BiSeNet":
+		# BiSeNet requires pre-trained ResNet weights
+		network, init_fn = build_bisenet(net_input, preset_model = model_name, frontend=frontend, num_classes=num_classes, is_training=is_training)
 	elif model_name == "AdapNet":
 	    network = build_adaptnet(net_input, num_classes=num_classes)
 	elif model_name == "custom":
