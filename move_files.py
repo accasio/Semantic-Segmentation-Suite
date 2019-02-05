@@ -1,13 +1,26 @@
 from random import seed
 seed(1)
+from random import shuffle
+from os import listdir
+from os.path import isfile, join
 import os
 import numpy as np
 from PIL import Image
 import glob
 import shutil
 
-from random import shuffle
 
+
+def names_to_numbers():
+    folder = '/home/james/Pictures/720rocsafe'
+
+    print(os.path.join(folder, '/gt/*.png'))
+    filelist = glob.glob('/home/james/Pictures/720rocsafe/gt/*.png')
+
+    i = 0
+    for file in sorted(filelist):
+        os.rename(file, '/home/james/Pictures/720rocsafe/ground_truth/%04d.png' % i)
+        i = i + 1
 
 
 def move_from_file(filename):
@@ -69,8 +82,15 @@ def move_train_masks():
 
 
 def split_imgs():
-    x_list = [str(x) for x in range(1,1000)]
+    dataset = 'aeroscapes_no_animal'
+    my_path = '/home/james/Documents/%s/data/aeroscapes/JPEGImages/' % dataset
+    x_list = [f for f in listdir(my_path) if isfile(join(my_path, f))]
+    x_list = sorted(x_list)
+    print("Images")
+    print(x_list[0])
     shuffle(x_list)
+    print(x_list[0])
+
     index_num = int(len(x_list) * 0.8)
     train_cpy = x_list[:index_num]
     test = x_list[index_num:]
@@ -78,22 +98,36 @@ def split_imgs():
     train = train_cpy[:index_num]
     val = train_cpy[index_num:]
 
-    for file in glob.glob('/home/james/Pictures/train/images/*.png'):
+    if not os.path.exists('/home/james/Documents/seg-suite/datasets/%s/val' % dataset):
+        os.makedirs('/home/james/Documents/seg-suite/datasets/%s/val' % dataset)
+    if not os.path.exists('/home/james/Documents/seg-suite/datasets/%s/test' % dataset):
+        os.makedirs('/home/james/Documents/seg-suite/datasets/%s/test' % dataset)
+    if not os.path.exists('/home/james/Documents/seg-suite/datasets/%s/train' % dataset):
+        os.makedirs('/home/james/Documents/seg-suite/datasets/%s/train' % dataset)
+
+    for file in glob.glob('%s*.jpg' % my_path):
         filename = os.path.basename(file)
-        filename = filename.split('original_')[1].split('.png')[0]
+
         if filename in val:
-            shutil.copyfile(file, '/home/james/Pictures/train/val/%s' % filename)
+            shutil.copyfile(file, '/home/james/Documents/seg-suite/datasets/%s/val/%s' % (dataset, filename))
         elif filename in test:
-            shutil.copyfile(file, '/home/james/Pictures/train/test/%s' % filename)
+            shutil.copyfile(file, '/home/james/Documents/seg-suite/datasets/%s/test/%s' % (dataset, filename))
         elif filename in train:
-            shutil.copyfile(file, '/home/james/Pictures/train/train/%s' % filename)
+            shutil.copyfile(file, '/home/james/Documents/seg-suite/datasets/%s/train/%s' % (dataset, filename))
         else:
             print('%s not found in any lists' % filename)
 
 
 def split_labels():
-    x_list = [str(x) for x in range(1,1000)]
+    dataset = 'aeroscapes_no_animal'
+    my_path = '/home/james/Documents/%s/data/aeroscapes/Visualizations/' % dataset
+    x_list = [f for f in listdir(my_path) if isfile(join(my_path, f))]
+    x_list = sorted(x_list)
+    print("Labels")
+    print(x_list[0])
     shuffle(x_list)
+    print(x_list[0])
+
     index_num = int(len(x_list) * 0.8)
     train_cpy = x_list[:index_num]
     test = x_list[index_num:]
@@ -101,17 +135,26 @@ def split_labels():
     train = train_cpy[:index_num]
     val = train_cpy[index_num:]
 
-    for file in glob.glob('/home/james/Pictures/train/labels/*.png'):
+    if not os.path.exists('/home/james/Documents/seg-suite/datasets/%s/val_labels' % dataset):
+        os.makedirs('/home/james/Documents/seg-suite/datasets/%s/val_labels' % dataset)
+    if not os.path.exists('/home/james/Documents/seg-suite/datasets/%s/test_labels' % dataset):
+        os.makedirs('/home/james/Documents/seg-suite/datasets/%s/test_labels' % dataset)
+    if not os.path.exists('/home/james/Documents/seg-suite/datasets/%s/train_labels' % dataset):
+        os.makedirs('/home/james/Documents/seg-suite/datasets/%s/train_labels' % dataset)
+
+
+    for file in glob.glob('%s*.png' % my_path):
         filename = os.path.basename(file)
-        filename = filename.split('segmented_train_')[1].split('.png')[0]
+
         if filename in val:
-            shutil.copyfile(file, '/home/james/Pictures/train/val_labels/%s.png' % filename)
+            shutil.copyfile(file, '/home/james/Documents/seg-suite/datasets/%s/val_labels/%s' % (dataset, filename))
         elif filename in test:
-            shutil.copyfile(file, '/home/james/Pictures/train/test_labels/%s.png' % filename)
+            shutil.copyfile(file, '/home/james/Documents/seg-suite/datasets/%s/test_labels/%s' % (dataset, filename))
         elif filename in train:
-            shutil.copyfile(file, '/home/james/Pictures/train/train_labels/%s.png' % filename)
+            shutil.copyfile(file, '/home/james/Documents/seg-suite/datasets/%s/train_labels/%s' % (dataset, filename))
         else:
             print('%s not found in any lists' % filename)
+
 
 
 def reduce_img_size(base_dir):
@@ -121,13 +164,22 @@ def reduce_img_size(base_dir):
     for sub_dir in dirs:
         dir = base_dir + sub_dir
 
+        for file in glob.glob('%s/*.jpg' % dir):
+            if '.csv' in file:
+                continue
+            if os.path.isdir(file):
+                continue
+            img = Image.open(file)
+            img_resized = img.resize((500, 500))
+            os.remove(file)
+            img_resized.save('%s/%s' % (dir, os.path.basename(file)))
         for file in glob.glob('%s/*.png' % dir):
             if '.csv' in file:
                 continue
             if os.path.isdir(file):
                 continue
             img = Image.open(file)
-            img_resized = img.resize((350, 350), Image.ANTIALIAS)
+            img_resized = img.resize((500, 500))
             os.remove(file)
             img_resized.save('%s/%s' % (dir, os.path.basename(file)))
 
@@ -152,5 +204,74 @@ def reduce_img_res(base_dir):
             img.save('%s/reresed/%d-%s' % (dir, i/10, os.path.basename(file)), quality=i)
 
 
+def color_converter(find, replace, data):
+
+    r1, g1, b1 = find[0], find[1], find[2] # Original value
+    r2, g2, b2 = replace[0], replace[1], replace[2] # Value that we want to replace it with
+    red, green, blue = data[:, :, 0], data[:, :, 1], data[:, :, 2]
+    mask = (red == r1) & (green == g1) & (blue == b1)
+    data[:, :, :3][mask] = [r2, g2, b2]
+    return data
+
+
+def change_pixels():
+    dataset = 'trainenv'
+
+    dir = '/home/james/Documents/combinedDataset/dataset/%s/gt/*.png' % dataset
+
+    for file in glob.glob(dir):
+        filename = os.path.basename(file)
+        im = Image.open(file)
+        data = np.array(im)
+
+        data = color_converter([55,181,57], [0,0,0], data)
+        data = color_converter([153,108,6], [0,64,0], data)
+        data = color_converter([115,176,195], [255,255,0], data)
+        data = color_converter([81,13,36], [192,0,0], data)
+        data = color_converter([206,190,59], [192,128,0], data)
+        data = color_converter([190,225,64], [0,128,0], data)
+        data = color_converter([89,121,72], [192,128,128], data)
+        data = color_converter([161,171,27], [128,128,0], data)
+        data = color_converter([112,105,191], [0,128,128], data)
+        data = color_converter([135,169,180], [128,128,128], data)
+        data = color_converter([235,208,124], [192,128,0], data)
+
+        im = Image.fromarray(data)
+        im.save('/home/james/Documents/combinedDataset/dataset/%s/gt/%s' % (dataset, filename))
+
+
+def split_aero():
+    with open('/home/james/Documents/combinedDataset/dataset/trn.txt') as file_list:
+        content1 = file_list.readlines()
+
+    content1 = [x.strip() for x in content1]
+
+    with open('/home/james/Documents/combinedDataset/dataset/test.txt') as file_list:
+        content2 = file_list.readlines()
+
+    content2 = [x.strip() for x in content2]
+
+    with open('/home/james/Documents/combinedDataset/dataset/val.txt') as file_list:
+        content3 = file_list.readlines()
+
+        content3 = [x.strip() for x in content3]
+
+    content = content1 + content2 + content3
+
+    files = [os.path.splitext(os.path.basename(x))[0] for x in glob.glob('/home/james/Documents/combinedDataset/JPEGImages/*.jpg')]
+
+    main_list = np.setdiff1d(files, content)
+
+    print(main_list)
+
+    # for filename in content:
+    #     shutil.copyfile('/home/james/Documents/combinedDataset/JPEGImages/' + filename + '.jpg',
+    #                     '/home/james/Documents/combinedDataset/dataset/aeroscapes/val/'+ filename + '.jpg')
+    #     shutil.copyfile('/home/james/Documents/combinedDataset/Visualizations/' + filename + '.png',
+    #                     '/home/james/Documents/combinedDataset/dataset/aeroscapes/val_labels/'+ filename + '.png')
+
+
+
 if __name__ == '__main__':
-    reduce_img_size('/home/james/Documents/seg-suite/datasets/trains-small/')
+    # reduce_img_size('/home/james/Documents/seg-suite/datasets/rocsafe/')
+    change_pixels()

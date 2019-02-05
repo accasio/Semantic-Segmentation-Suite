@@ -34,16 +34,17 @@ num_classes = len(label_values)
 max_avg = 0
 max_avg_model = None
 
-folders = ['0008', '0013', '0021', '0025', '0030']
+folders = ['0004', '0008', '0016', '0032', '0050', '0070', '0090', '0100', '0120', '0128', '0149']
 
-for f in sorted(glob.glob('./checkpoints/trains-tiny-loss/*/')):
+for f in glob.glob('./checkpoints/rocsafe/*/'):
     if os.path.isfile(f):
         continue
-    # folder = './checkpoints/trains-sigmoid/' + f + '/'
+    # folder = './checkpoints/trains/' + f + '/'
     checkpoint_path = f + 'model.ckpt'
     generation = os.path.basename(os.path.normpath(f))
-    if int(generation) >= 28:
-        continue
+    # generation = f
+    # if int(generation) >= 28:
+    #     continue
     print("\n**************************\nRunning test on Generation", generation)
 
     # Initializing network
