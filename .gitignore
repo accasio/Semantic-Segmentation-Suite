@@ -16,6 +16,4 @@ CamVid_train.tfrecords
 tfrecords.py
 .idea
 datasets/*
-
-datasets/
 predicted/

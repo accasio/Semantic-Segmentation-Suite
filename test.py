@@ -1,4 +1,4 @@
-import os, time, cv2, sys, math
+import os, time, cv2, sys
 import tensorflow as tf
 import argparse
 import numpy as np

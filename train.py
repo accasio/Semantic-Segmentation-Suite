@@ -2,13 +2,12 @@ from __future__ import print_function
 
 import numpy as np
 import glob
-import os, time, cv2, sys, math
+import cv2
 
-import time, datetime
+import time
 import argparse
 import random
-import os, sys
-import subprocess
+import os
 
 # use 'Agg' on matplotlib so that plots could be generated even without Xserver
 # running
