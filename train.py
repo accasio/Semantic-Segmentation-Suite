@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import numpy as np
-import matplotlib.pyplot as plt
 import glob
 import os, time, cv2, sys, math
 
@@ -10,10 +9,16 @@ import argparse
 import random
 import os, sys
 import subprocess
+
+# use 'Agg' on matplotlib so that plots could be generated even without Xserver
+# running
+import matplotlib
+matplotlib.use('Agg')
 import tensorflow as tf
 from utils import utils, helpers
 from builders import model_builder
 
+import matplotlib.pyplot as plt
 
 
 def str2bool(v):
@@ -102,9 +107,9 @@ network, init_fn = model_builder.build_model(model_name=args.model, frontend=arg
                                              num_classes=num_classes, crop_width=args.crop_width,
                                              crop_height=args.crop_height, is_training=True)
 
-loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=network, labels=net_output))
+loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=network, labels=net_output))
 
-opt = tf.train.RMSPropOptimizer(learning_rate=0.0001, decay=0.995).minimize(loss, var_list=[var for var in
+opt = tf.train.RMSPropOptimizer(learning_rate=0.000001, decay=0.995).minimize(loss, var_list=[var for var in
                                                                                             tf.trainable_variables()])
 
 saver = tf.train.Saver(max_to_keep=1000)
