@@ -1,4 +1,5 @@
 import os, time, cv2, sys
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import tensorflow as tf
 import argparse
 import numpy as np
@@ -7,6 +8,8 @@ from utils import utils, helpers
 from builders import model_builder
 
 parser = argparse.ArgumentParser()
+# parser.add_argument('--checkpoint_epoch', type=str, default=None, required=True,
+#                     help='The epoch of the checkpoint weights being tested.')
 parser.add_argument('--checkpoint_path', type=str, default=None, required=True,
                     help='The path to the latest checkpoint weights for your model.')
 parser.add_argument('--crop_height', type=int, default=512, help='Height of cropped input image to network')
@@ -18,6 +21,8 @@ parser.add_argument('--dataset', type=str, default="CamVid", required=False, hel
 args = parser.parse_args()
 
 # Get the names of the classes so we can record the evaluation results
+checkpoint_epoch = (args.checkpoint_path).split(args.dataset + '/')[1].split('/model.ckpt')[0]
+
 print("Retrieving dataset information ...")
 dataset_dir = './datasets/'
 class_names_list, label_values = helpers.get_label_info(os.path.join(dataset_dir + args.dataset, "class_dict.csv"))
@@ -59,7 +64,10 @@ if not os.path.isdir("%s" % "test"):
 if not os.path.isdir("%s/%s" % ("test", args.dataset)):
     os.makedirs("%s/%s" % ("test", args.dataset))
 
-target = open("%s/test_scores.csv" % ("test"), 'w')
+if not os.path.isdir("%s/%s/%s" % ("test", args.dataset, checkpoint_epoch)):
+    os.makedirs("%s/%s/%s" % ("test", args.dataset, checkpoint_epoch))
+
+target = open("%s/%s/%s/test_scores.csv" % ("test", args.dataset, checkpoint_epoch), 'w')
 target.write("test_name, test_accuracy, precision, recall, f1 score, mean iou, %s\n" % (class_names_string))
 scores_list = []
 class_scores_list = []
@@ -106,9 +114,9 @@ for ind in range(len(test_input_names)):
 
     gt = helpers.colour_code_segmentation(gt, label_values)
 
-    cv2.imwrite("%s/%s/%s_pred.png" % ("test", args.dataset, file_name),
+    cv2.imwrite("%s/%s/%s/%s_pred.png" % ("test", args.dataset, checkpoint_epoch, file_name),
                 cv2.cvtColor(np.uint8(out_vis_image), cv2.COLOR_RGB2BGR))
-    cv2.imwrite("%s/%s/%s_gt.png" % ("test", args.dataset, file_name), cv2.cvtColor(np.uint8(gt), cv2.COLOR_RGB2BGR))
+    cv2.imwrite("%s/%s/%s/%s_gt.png" % ("test", args.dataset, checkpoint_epoch, file_name), cv2.cvtColor(np.uint8(gt), cv2.COLOR_RGB2BGR))
 
 target.close()
 

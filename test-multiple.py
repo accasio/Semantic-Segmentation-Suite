@@ -1,4 +1,5 @@
-import os, time, cv2, sys, math
+import os, time, cv2, sys
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import glob
 import tensorflow as tf
 import argparse
@@ -8,8 +9,6 @@ from utils import utils, helpers
 from builders import model_builder
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--checkpoint_path', type=str, default=None, required=True,
-                    help='The path to the latest checkpoint weights for your model.')
 parser.add_argument('--crop_height', type=int, default=512, help='Height of cropped input image to network')
 parser.add_argument('--crop_width', type=int, default=512, help='Width of cropped input image to network')
 parser.add_argument('--model', type=str, default=None, required=True, help='The model you are using')
@@ -31,16 +30,16 @@ for class_name in class_names_list:
 
 num_classes = len(label_values)
 
-max_avg = 0
+max_iou = 0
 max_avg_model = None
 
-folders = ['0004', '0008', '0016', '0032', '0050', '0070', '0090', '0100', '0120', '0128', '0149']
+folders = ['0023', '0027', '0015', '0017', '0019']
 
-for f in glob.glob('./checkpoints/rocsafe/*/'):
+for f in folders:
     if os.path.isfile(f):
         continue
-    # folder = './checkpoints/trains/' + f + '/'
-    checkpoint_path = f + 'model.ckpt'
+    folder = './checkpoints/' + args.dataset + '/' + f + '/'
+    checkpoint_path = folder + 'model.ckpt'
     generation = os.path.basename(os.path.normpath(f))
     # generation = f
     # if int(generation) >= 28:
@@ -61,7 +60,7 @@ for f in glob.glob('./checkpoints/rocsafe/*/'):
     print('Loading model checkpoint weights ...')
 
     saver = tf.train.Saver(max_to_keep=1000)
-
+    print(checkpoint_path)
     saver.restore(sess, checkpoint_path)
     # Load the data
     print("Loading the data ...")
@@ -131,19 +130,18 @@ for f in glob.glob('./checkpoints/rocsafe/*/'):
 
     avg_score = np.mean(scores_list)
     class_avg_scores = np.mean(class_scores_list, axis=0)
-    real_avg = (class_avg_scores[0] + class_avg_scores[1]) / 2
-    if real_avg > max_avg:
-        max_avg = real_avg
-        max_avg_model = checkpoint_path
-        print("\nNew maximum found = ", max_avg)
-
     avg_precision = np.mean(precision_list)
     avg_recall = np.mean(recall_list)
     avg_f1 = np.mean(f1_list)
     avg_iou = np.mean(iou_list)
     avg_time = np.mean(run_times_list)
+
+    if avg_iou > max_iou:
+        max_iou = avg_iou
+        max_avg_model = checkpoint_path
+        print("\nNew maximum found = ", max_iou)
+
     print("\nAverage test accuracy = ", avg_score)
-    print("\nReal average test accuracy = ", real_avg)
     print("Average per class test accuracies = \n")
     for index, item in enumerate(class_avg_scores):
         print("%s = %f" % (class_names_list[index], item))
@@ -155,5 +153,5 @@ for f in glob.glob('./checkpoints/rocsafe/*/'):
     target.close()
     tf.reset_default_graph()
 
-print('\nMax Average Model =', max_avg_model)
-print('Max Average Model Score =', max_avg)
+print('\nMax mIoU Model =', max_avg_model)
+print('Max mIoU Model Score =', max_iou)

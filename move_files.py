@@ -204,6 +204,15 @@ def reduce_img_res(base_dir):
             img.save('%s/reresed/%d-%s' % (dir, i/10, os.path.basename(file)), quality=i)
 
 
+def append_to_files():
+
+    for file in glob.glob('/home/james/Documents/combinedDataset/dataset/MN/gt/*.png'):
+        shutil.copyfile(file, '/home/james/Documents/seg-suite/datasets/mNeighbourhood/train_labels/mn-' + os.path.basename(file))
+
+    for file in glob.glob('/home/james/Documents/combinedDataset/dataset/MN/original/*.jpg'):
+        shutil.copyfile(file, '/home/james/Documents/seg-suite/datasets/mNeighbourhood/train/mn-' + os.path.basename(file))
+
+
 def color_converter(find, replace, data):
 
     r1, g1, b1 = find[0], find[1], find[2] # Original value
@@ -215,9 +224,9 @@ def color_converter(find, replace, data):
 
 
 def change_pixels():
-    dataset = 'trainenv'
+    dataset = 'fullTrain'
 
-    dir = '/home/james/Documents/combinedDataset/dataset/%s/gt/*.png' % dataset
+    dir = '/home/james/Documents/%s/gt/*.png' % dataset
 
     for file in glob.glob(dir):
         filename = os.path.basename(file)
@@ -237,41 +246,42 @@ def change_pixels():
         data = color_converter([235,208,124], [192,128,0], data)
 
         im = Image.fromarray(data)
-        im.save('/home/james/Documents/combinedDataset/dataset/%s/gt/%s' % (dataset, filename))
+        im.save('/home/james/Documents/seg-suite/datasets/%s/train_labels/%s' % (dataset, filename))
 
 
 def split_aero():
     with open('/home/james/Documents/combinedDataset/dataset/trn.txt') as file_list:
-        content1 = file_list.readlines()
+        content = file_list.readlines()
 
-    content1 = [x.strip() for x in content1]
+    for filename in content:
+        filename = filename.strip('\n')
+        shutil.copyfile('/home/james/Documents/aeroscapes_water/data/aeroscapes/JPEGImages/' + filename + '.jpg',
+                        '/home/james/Documents/seg-suite/datasets/aeroscapes/train/'+ filename + '.jpg')
+        shutil.copyfile('/home/james/Documents/aeroscapes_water/data/aeroscapes/Visualizations/' + filename + '.png',
+                        '/home/james/Documents/seg-suite/datasets/aeroscapes/train_labels/'+ filename + '.png')
 
     with open('/home/james/Documents/combinedDataset/dataset/test.txt') as file_list:
-        content2 = file_list.readlines()
+        content = file_list.readlines()
 
-    content2 = [x.strip() for x in content2]
+    for filename in content:
+        filename = filename.strip('\n')
+        shutil.copyfile('/home/james/Documents/aeroscapes_water/data/aeroscapes/JPEGImages/' + filename + '.jpg',
+                        '/home/james/Documents/seg-suite/datasets/aeroscapes/test/'+ filename + '.jpg')
+        shutil.copyfile('/home/james/Documents/aeroscapes_water/data/aeroscapes/Visualizations/' + filename + '.png',
+                        '/home/james/Documents/seg-suite/datasets/aeroscapes/test_labels/'+ filename + '.png')
+
 
     with open('/home/james/Documents/combinedDataset/dataset/val.txt') as file_list:
-        content3 = file_list.readlines()
+        content = file_list.readlines()
 
-        content3 = [x.strip() for x in content3]
-
-    content = content1 + content2 + content3
-
-    files = [os.path.splitext(os.path.basename(x))[0] for x in glob.glob('/home/james/Documents/combinedDataset/JPEGImages/*.jpg')]
-
-    main_list = np.setdiff1d(files, content)
-
-    print(main_list)
-
-    # for filename in content:
-    #     shutil.copyfile('/home/james/Documents/combinedDataset/JPEGImages/' + filename + '.jpg',
-    #                     '/home/james/Documents/combinedDataset/dataset/aeroscapes/val/'+ filename + '.jpg')
-    #     shutil.copyfile('/home/james/Documents/combinedDataset/Visualizations/' + filename + '.png',
-    #                     '/home/james/Documents/combinedDataset/dataset/aeroscapes/val_labels/'+ filename + '.png')
-
+    for filename in content:
+        filename = filename.strip('\n')
+        shutil.copyfile('/home/james/Documents/aeroscapes_water/data/aeroscapes/JPEGImages/' + filename + '.jpg',
+                        '/home/james/Documents/seg-suite/datasets/aeroscapes/val/'+ filename + '.jpg')
+        shutil.copyfile('/home/james/Documents/aeroscapes_water/data/aeroscapes/Visualizations/' + filename + '.png',
+                        '/home/james/Documents/seg-suite/datasets/aeroscapes/val_labels/'+ filename + '.png')
 
 
 if __name__ == '__main__':
     # reduce_img_size('/home/james/Documents/seg-suite/datasets/rocsafe/')
-    change_pixels()
+    append_to_files()
